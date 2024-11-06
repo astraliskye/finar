@@ -31,8 +31,8 @@ public class Game {
     private Instant player2LastMove;
 
     private long lastTimeUpdate;
-    private AtomicLong player1Time;
-    private AtomicLong player2Time;
+    private long player1Time;
+    private long player2Time;
 
     private SecureRandom random = new SecureRandom();
 
@@ -41,8 +41,8 @@ public class Game {
         this.p2 = p2;
         this.id = random.nextLong();
         lastTimeUpdate = System.currentTimeMillis();
-        player1Time = new AtomicLong(10 * 60 * 1000);
-        player2Time = new AtomicLong(10 * 60 * 1000);
+        player1Time = 20 * 1000;
+        player2Time = 20 * 1000;
     }
 
     public void makeMove(String player, byte n) throws InvalidMoveException, OutOfTurnException {

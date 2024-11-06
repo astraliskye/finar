@@ -23,7 +23,8 @@ public class GameService {
     private final ConnectionService connectionService;
     Map<String, Game> activeGames = new HashMap<>();
 
-    public GameService(GameResultRepository gameResultRepository, ConnectionService connectionService) {
+    public GameService(GameResultRepository gameResultRepository,
+                       ConnectionService connectionService) {
         this.gameResultRepository = gameResultRepository;
         this.connectionService = connectionService;
     }
@@ -43,41 +44,77 @@ public class GameService {
         return game.getId();
     }
 
+    public void cleanupGame(Game game,
+                            ResultType resultType,
+                            String winner) {
+        activeGames.remove(game.getP1());
+        activeGames.remove(game.getP2());
+
+        var response = new MessageResponse(
+                "gameOver",
+                new GameOver(
+                        resultType.name(),
+                        game.getP2()
+                )
+        );
+
+        connectionService.sendMessage(
+                game.getP1(),
+                response
+        );
+
+        connectionService.sendMessage(
+                game.getP2(),
+                response
+        );
+
+        gameResultRepository.save(
+                new GameResult(
+                        game.getId(),
+                        game.getP1(),
+                        game.getP2(),
+                        resultType,
+                        game.getP2()
+                )
+        );
+
+        connectionService.closeSession(game.getP1());
+        connectionService.closeSession(game.getP2());
+    }
+
     public void makeMove(String player, byte n) {
         var game = getGameByPlayer(player);
         var otherPlayer = player.equals(game.getP1()) ? game.getP2() : game.getP1();
 
-        if (checkTimeout(game)) {
-            // checkTimeout will clean up the game
-            return;
-        }
-
         try {
+            var timeout = checkTimeoutAndUpdate(game);
+
+            if (timeout) {
+                cleanupGame(game, ResultType.TIMEOUT, otherPlayer);
+                return;
+            }
+
             game.makeMove(player, n);
 
-            var moveResponse = new Move(
+            var moveResponse = new MessageResponse(
+                    "move",
+                    new Move(
                     player,
                     n,
                     new TimeControl(
-                            game.getPlayer1Time().longValue(),
-                            game.getPlayer2Time().longValue()
+                            game.getPlayer1Time(),
+                            game.getPlayer2Time()
                     )
-            );
+            ));
 
             connectionService.sendMessage(
                     otherPlayer,
-                    new MessageResponse(
-                            "move",
-                            moveResponse
-                    )
+                    moveResponse
             );
 
             connectionService.sendMessage(
                     player,
-                    new MessageResponse(
-                            "move",
-                            moveResponse
-                    )
+                    moveResponse
             );
         } catch (InvalidMoveException e) {
             log.debug("Invalid move");
@@ -88,11 +125,30 @@ public class GameService {
         checkGameOver(game);
     }
 
+    public void handleFlag(String player) {
+        var game = getGameByPlayer(player);
+        var timeout = checkTimeoutAndUpdate(game);
+
+        if (timeout) {
+            cleanupGame(getGameByPlayer(player), ResultType.TIMEOUT, player);
+        } else {
+            connectionService.sendMessage(
+                    player,
+                    new MessageResponse(
+                            "timeUpdate",
+                            new TimeControl(
+                                    game.getPlayer1Time(),
+                                    game.getPlayer2Time()
+                            )
+                    )
+            );
+        }
+    }
+
     private void checkGameOver(Game game) {
         if (game.isFinar()) {
             activeGames.remove(game.getP1());
             activeGames.remove(game.getP2());
-
 
             var response = new MessageResponse(
                     "gameOver",
@@ -161,97 +217,34 @@ public class GameService {
         }
     }
 
-    private boolean checkTimeout(Game game) {
+    public boolean checkTimeoutAndUpdate(Game game) {
         var currentTime = System.currentTimeMillis();
         var timeDiff = currentTime - game.getLastTimeUpdate();
         var currentPlayer = game.getCurrentTurn();
 
         if (currentPlayer.equals(game.getP1()) && !game.getMoves().isEmpty()) {
-            var newTime = game.getPlayer1Time().updateAndGet(time -> time - timeDiff);
-            game.setLastTimeUpdate(currentTime);
+            var newTime = Math.max(game.getPlayer1Time() - timeDiff, 0);
 
-            if (newTime < 0) {
-                activeGames.remove(game.getP1());
-                activeGames.remove(game.getP2());
+            game.setPlayer1Time(newTime);
 
-                var response = new MessageResponse(
-                        "gameOver",
-                        new GameOver(
-                                "timeout",
-                                game.getP2()
-                        )
-                );
-
-                connectionService.sendMessage(
-                        game.getP2(),
-                        response
-                );
-
-                connectionService.sendMessage(
-                        currentPlayer,
-                        response
-                );
-
-                gameResultRepository.save(
-                        new GameResult(
-                                game.getId(),
-                                game.getP1(),
-                                game.getP2(),
-                                ResultType.EXPIRE,
-                                game.getP2()
-                        )
-                );
-
-                connectionService.closeSession(currentPlayer);
-                connectionService.closeSession(game.getP2());
+            if (newTime == 0) {
                 return true;
             }
         } else if (game.getP2().equals(game.getCurrentTurn()) && game.getMoves().size() > 1) {
-            var newTime = game.getPlayer2Time().updateAndGet(time -> time - timeDiff);
+            var newTime = Math.max(game.getPlayer2Time() - timeDiff, 0);
+            game.setPlayer2Time(newTime);
             game.setLastTimeUpdate(currentTime);
 
-            if (newTime < 0) {
-                activeGames.remove(game.getP1());
-                activeGames.remove(game.getP2());
-
-                var response = new MessageResponse(
-                        "gameOver",
-                        new GameOver(
-                                "timeout",
-                                game.getP1()
-                        )
-                );
-
-                connectionService.sendMessage(
-                        currentPlayer,
-                        response
-                );
-
-                connectionService.sendMessage(
-                        game.getP1(),
-                        response
-                );
-
-                gameResultRepository.save(
-                        new GameResult(
-                                game.getId(),
-                                game.getP1(),
-                                game.getP2(),
-                                ResultType.EXPIRE,
-                                game.getP1()
-                        )
-                );
-
-                connectionService.closeSession(currentPlayer);
-                connectionService.closeSession(game.getP1());
+            if (newTime == 0) {
                 return true;
             }
         }
 
+        game.setLastTimeUpdate(currentTime);
         return false;
     }
 
-    @Scheduled(fixedRate = 1000)
+    @Scheduled(fixedRate = 20 * 1000)
     public void timeCheck() {
         var seenGames = new HashSet<Long>();
 
@@ -262,7 +255,11 @@ public class GameService {
                 seenGames.add(game.getId());
             }
 
-            checkTimeout(game);
+            var timeout = checkTimeoutAndUpdate(game);
+
+            if (timeout) {
+                cleanupGame(game, ResultType.TIMEOUT, game.getCurrentTurn());
+            }
         }
     }
 

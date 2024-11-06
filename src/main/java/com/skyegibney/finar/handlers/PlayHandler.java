@@ -52,8 +52,8 @@ public class PlayHandler extends FinarSocketHandler {
                                     username.equals(game.getP1()) ? 0 : 1,
                                     game.getMoves().stream().map(Object::toString).collect(Collectors.joining(",")),
                                     new TimeControl(
-                                            game.getPlayer1Time().longValue(),
-                                            game.getPlayer2Time().longValue()
+                                            game.getPlayer1Time(),
+                                            game.getPlayer2Time()
                                     )
                             )
                     )
@@ -79,6 +79,8 @@ public class PlayHandler extends FinarSocketHandler {
                             move
                     );
                     break;
+                case "timeFlag":
+                    gameService.handleFlag(session.getPrincipal().getName());
                 default:
                     break;
             }

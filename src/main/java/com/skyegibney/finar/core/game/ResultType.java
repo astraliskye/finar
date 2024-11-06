@@ -4,6 +4,6 @@ public enum ResultType {
     FINAR,
     ABORT,
     ABANDON,
-    EXPIRE,
+    TIMEOUT,
     DRAW
 }
