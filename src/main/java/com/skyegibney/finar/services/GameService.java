@@ -74,7 +74,7 @@ public class GameService {
                         game.getP1(),
                         game.getP2(),
                         resultType,
-                        game.getP2()
+                        winner
                 )
         );
 
