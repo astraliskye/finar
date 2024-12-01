@@ -55,6 +55,7 @@ public class ConnectionService {
             String payload = mapper.writeValueAsString(message);
             sessions.get(username).sendMessage(new TextMessage(payload));
             log.debug("Sending message to user {}: {}", username, payload);
+            log.debug("{}", payload);
         } catch (IOException e) {
             log.error("Error while sending message for user '{}': {}", username, e.getMessage());
         }

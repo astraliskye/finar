@@ -2,7 +2,7 @@ spring:
   application:
     name: finar
   datasource:
-    url: jdbc:postgresql://localhost/finar?user=app&password=hi
+    url: jdbc:postgresql://localhost/finar?user=postgres&password=postgres
   jpa:
     hibernate:
       ddl-auto: create
@@ -19,7 +19,9 @@ server:
   servlet:
     session:
       timeout: 5s
+  port: 8000
 logging.level.root: WARN
 logging.level.org.springframework.web: DEBUG
 logging.level.org.springframework.security: TRACE
 logging.level.com.skyegibney.finar.services: DEBUG
+logging.level.com.skyegibney.finar.handlers: DEBUG

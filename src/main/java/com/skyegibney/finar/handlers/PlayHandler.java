@@ -31,34 +31,7 @@ public class PlayHandler extends FinarSocketHandler {
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         super.afterConnectionEstablished(session);
         var username = session.getPrincipal().getName();
-        var game = gameService.getGameByPlayer(username);
-
-        if (game == null) {
-            connectionService.sendMessage(
-                    username,
-                    new MessageResponse(
-                            "redirect",
-                            "home"
-                    )
-            );
-        } else {
-            connectionService.sendMessage(
-                    username,
-                    new MessageResponse(
-                            "initialJoin",
-                            new InitialJoin(
-                                    username,
-                                    username.equals(game.getP1()) ? game.getP2() : game.getP1(),
-                                    username.equals(game.getP1()) ? 0 : 1,
-                                    game.getMoves().stream().map(Object::toString).collect(Collectors.joining(",")),
-                                    new TimeControl(
-                                            game.getPlayer1Time(),
-                                            game.getPlayer2Time()
-                                    )
-                            )
-                    )
-            );
-        }
+        gameService.initialJoin(username);
     }
 
     @Override
@@ -69,18 +42,26 @@ public class PlayHandler extends FinarSocketHandler {
 
             switch (clientMessage.type()) {
                 case "quit":
-                    gameService.quitPlayer(session.getPrincipal().getName());
+                    gameService.quitPlayer(
+                            clientMessage.gameId(),
+                            session.getPrincipal().getName());
                     break;
                 case "move":
                     byte move = ((Integer)clientMessage.data()).byteValue();
 
+                    log.debug("==================================================");
+                    log.debug("Game ID: {}", clientMessage.gameId());
+
                     gameService.makeMove(
+                            clientMessage.gameId(),
                             session.getPrincipal().getName(),
                             move
                     );
                     break;
                 case "timeFlag":
-                    gameService.handleFlag(session.getPrincipal().getName());
+                    gameService.handleFlag(
+                            clientMessage.gameId(),
+                            session.getPrincipal().getName());
                 default:
                     break;
             }

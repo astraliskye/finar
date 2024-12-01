@@ -12,7 +12,7 @@ import java.util.*;
 @Getter
 @Setter
 public class Game {
-    private long id;
+    private int id;
 
     private String p1;
     private String p2;
@@ -37,28 +37,16 @@ public class Game {
     public Game(String p1, String p2) {
         this.p1 = p1;
         this.p2 = p2;
-        this.id = random.nextLong();
+        this.id = random.nextInt();
         lastTimeUpdate = System.currentTimeMillis();
         player1Time = 20 * 1000;
         player2Time = 20 * 1000;
     }
 
-    public void makeMove(String player, byte n) throws InvalidMoveException, OutOfTurnException {
-        if (n < 0 || n >= 100) {
-            throw new InvalidMoveException();
-        }
-
-        if (!getCurrentTurn().equals(player)) {
-            throw new OutOfTurnException();
-        }
-
-        try {
-            board[n] = currentMove;
-            moves.add(n);
-            currentMove++;
-        } catch (ArrayIndexOutOfBoundsException e) {
-            throw new InvalidMoveException();
-        }
+    public void makeMove(String player, byte n) throws ArrayIndexOutOfBoundsException {
+        board[n] = currentMove;
+        moves.add(n);
+        currentMove++;
     }
 
     public void checkFinar() {
@@ -168,20 +156,14 @@ public class Game {
     }
 
     public void shufflePlayers() {
-        if (p2 != null) {
-            if (random.nextFloat() < 0.5) {
-                String temp = p1;
-                p1 = p2;
-                p2 = temp;
-            }
+        if (random.nextFloat() < 0.5) {
+            swapPlayers();
         }
     }
 
     public void swapPlayers() {
-        if (p2 != null) {
-            String temp = p1;
-            p1 = p2;
-            p2 = temp;
-        }
+        String temp = p1;
+        p1 = p2;
+        p2 = temp;
     }
 }

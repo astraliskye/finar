@@ -1,10 +1,7 @@
 package com.skyegibney.finar.services;
 
 import com.skyegibney.finar.core.game.ResultType;
-import com.skyegibney.finar.dtos.messages.server.GameOver;
-import com.skyegibney.finar.dtos.messages.server.MessageResponse;
-import com.skyegibney.finar.dtos.messages.server.Move;
-import com.skyegibney.finar.dtos.messages.server.TimeControl;
+import com.skyegibney.finar.dtos.messages.server.*;
 import com.skyegibney.finar.errors.InvalidMoveException;
 import com.skyegibney.finar.errors.OutOfTurnException;
 import com.skyegibney.finar.core.game.Game;
@@ -15,13 +12,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class GameService {
     private final GameResultRepository gameResultRepository;
     private final ConnectionService connectionService;
-    Map<String, Game> activeGames = new HashMap<>();
+    Map<Integer, Game> activeGames = new HashMap<>();
 
     public GameService(GameResultRepository gameResultRepository,
                        ConnectionService connectionService) {
@@ -29,26 +27,27 @@ public class GameService {
         this.connectionService = connectionService;
     }
 
-    public Game getGameByPlayer(String player) {
-        return activeGames.get(player);
-    }
-
     public long createGame(String player1, String player2) {
         var game = new Game(player1, player2);
-
-        activeGames.put(player1, game);
-        activeGames.put(player2, game);
-
+        activeGames.put(game.getId(), game);
         game.shufflePlayers();
-
         return game.getId();
+    }
+
+    public Game getGameByPlayer(String player) {
+        for (var game : activeGames.values()) {
+            if (player.equals(game.getP1()) || player.equals(game.getP2())) {
+                return game;
+            }
+        }
+
+        return null;
     }
 
     public void cleanupGame(Game game,
                             ResultType resultType,
                             String winner) {
-        activeGames.remove(game.getP1());
-        activeGames.remove(game.getP2());
+        activeGames.remove(game.getId());
 
         var response = new MessageResponse(
                 "gameOver",
@@ -82,8 +81,50 @@ public class GameService {
         connectionService.closeSession(game.getP2());
     }
 
-    public void makeMove(String player, byte n) {
-        var game = getGameByPlayer(player);
+    public void initialJoin(String player) {
+        for (var game: activeGames.values()) {
+            if (player.equals(game.getP1()) || player.equals(game.getP2())) {
+                log.debug("{}", game.getId());
+                connectionService.sendMessage(player,
+                        new MessageResponse(
+                                "initialJoin",
+                                new InitialJoin(
+                                        game.getId(),
+                                        player,
+                                        player.equals(game.getP1()) ? game.getP2() : game.getP1(),
+                                        player.equals(game.getP1()) ? 0 : 1,
+                                        game.getMoves().stream().map(Object::toString).collect(Collectors.joining(",")),
+                                        new TimeControl(
+                                                game.getPlayer1Time(),
+                                                game.getPlayer2Time()
+                                        )
+                                )
+                        ));
+            } else {
+                connectionService.sendMessage(player,
+                        new MessageResponse(
+                                "redirect",
+                                "home"
+                        ));
+            }
+        }
+    }
+
+    public void makeMove(int gameId, String player, byte n) {
+        var game = activeGames.get(gameId);
+
+        // Invalid game ID
+        if (game == null) {
+            log.debug("Invalid game ID {}", gameId);
+            return;
+        }
+
+        // Player is not the current player
+        if (!player.equals(game.getCurrentTurn())) {
+            log.debug("Player attempting to make move out of turn. Player: {}, GameID: {}", player, game.getId());
+            return;
+        }
+
         var otherPlayer = player.equals(game.getP1()) ? game.getP2() : game.getP1();
 
         try {
@@ -116,21 +157,23 @@ public class GameService {
                     player,
                     moveResponse
             );
-        } catch (InvalidMoveException e) {
-            log.debug("Invalid move");
-        } catch (OutOfTurnException e) {
-            log.debug("Player {} out of turn. Currently {}'s turn", player, game.getCurrentTurn());
+        } catch (ArrayIndexOutOfBoundsException e) {
+            log.debug("Invalid move in game {}, index {}", game.getId(), n);
         }
 
         checkGameOver(game);
     }
 
-    public void handleFlag(String player) {
-        var game = getGameByPlayer(player);
+    public void handleFlag(int gameId, String player) {
+        var game = activeGames.get(gameId);
+        if (game == null) {
+            return;
+        }
+
         var timeout = checkTimeoutAndUpdate(game);
 
         if (timeout) {
-            cleanupGame(getGameByPlayer(player), ResultType.TIMEOUT, player);
+            cleanupGame(game, ResultType.TIMEOUT, player);
         } else {
             connectionService.sendMessage(
                     player,
@@ -146,74 +189,11 @@ public class GameService {
     }
 
     private void checkGameOver(Game game) {
+        game.checkFinar();
         if (game.isFinar()) {
-            activeGames.remove(game.getP1());
-            activeGames.remove(game.getP2());
-
-            var response = new MessageResponse(
-                    "gameOver",
-                    new GameOver(
-                            "finar",
-                            game.getWinner()
-                    )
-            );
-
-            connectionService.sendMessage(
-                    game.getP1(),
-                    response
-            );
-
-            connectionService.sendMessage(
-                    game.getP2(),
-                    response
-            );
-
-            gameResultRepository.save(
-                    new GameResult(
-                            game.getId(),
-                            game.getP1(),
-                            game.getP2(),
-                            ResultType.FINAR,
-                            game.getWinner()
-                    )
-            );
-
-            connectionService.closeSession(game.getP1());
-            connectionService.closeSession(game.getP2());
+            cleanupGame(game, ResultType.FINAR, game.getWinner());
         } else if (game.getMoves().size() == 100) {
-            activeGames.remove(game.getP1());
-            activeGames.remove(game.getP2());
-
-            var response = new MessageResponse(
-                    "gameOver",
-                    new GameOver(
-                            "draw",
-                            ""
-                    )
-            );
-
-            connectionService.sendMessage(
-                    game.getP1(),
-                    response
-            );
-
-            connectionService.sendMessage(
-                    game.getP2(),
-                    response
-            );
-
-            gameResultRepository.save(
-                    new GameResult(
-                            game.getId(),
-                            game.getP1(),
-                            game.getP2(),
-                            ResultType.DRAW,
-                            ""
-                    )
-            );
-
-            connectionService.closeSession(game.getP1());
-            connectionService.closeSession(game.getP2());
+            cleanupGame(game, ResultType.DRAW, "");
         }
     }
 
@@ -246,15 +226,7 @@ public class GameService {
 
     @Scheduled(fixedRate = 20 * 1000)
     public void timeCheck() {
-        var seenGames = new HashSet<Long>();
-
         for (var game : activeGames.values()) {
-            if (seenGames.contains(game.getId())) {
-                continue;
-            } else {
-                seenGames.add(game.getId());
-            }
-
             var timeout = checkTimeoutAndUpdate(game);
 
             if (timeout) {
@@ -263,73 +235,23 @@ public class GameService {
         }
     }
 
-    public void quitPlayer(String player) {
-        var game = activeGames.get(player);
+    public void quitPlayer(int gameId, String player) {
+        var game = activeGames.get(gameId);
 
         if (game == null) {
             return;
         }
 
-        activeGames.remove(game.getP1());
-        activeGames.remove(game.getP2());
+        if (!player.equals(game.getP1()) && !player.equals(game.getP2())) {
+            return;
+        }
 
         if (player.equals(game.getP1()) && game.getCurrentMove() == 1
                 || player.equals(game.getP2()) && game.getCurrentMove() <= 2) {
-            // Abort game if player hasn't played a move yet
-            var otherPlayer = player.equals(game.getP1()) ? game.getP2() : game.getP1();
-            var response = new MessageResponse(
-                    "gameOver",
-                    new GameOver(
-                            "abort",
-                            ""
-                    )
-            );
-
-            connectionService.sendMessage(
-                    otherPlayer,
-                    response
-            );
-
-            connectionService.sendMessage(
-                    player,
-                    response
-            );
-
-            connectionService.closeSession(player);
-            connectionService.closeSession(otherPlayer);
+            cleanupGame(game, ResultType.ABORT, "");
         } else {
-            // Abandon game (counts for loss)
             var otherPlayer = player.equals(game.getP1()) ? game.getP2() : game.getP1();
-            var response = new MessageResponse(
-                    "gameOver",
-                    new GameOver(
-                            "abandon",
-                            otherPlayer
-                    )
-            );
-
-            connectionService.sendMessage(
-                    otherPlayer,
-                    response
-            );
-
-            connectionService.sendMessage(
-                    player,
-                    response
-            );
-
-            gameResultRepository.save(
-                    new GameResult(
-                            game.getId(),
-                            game.getP1(),
-                            game.getP2(),
-                            ResultType.ABANDON,
-                            otherPlayer
-                    )
-            );
-
-            connectionService.closeSession(player);
-            connectionService.closeSession(otherPlayer);
+            cleanupGame(game, ResultType.ABANDON, otherPlayer);
         }
     }
 }
