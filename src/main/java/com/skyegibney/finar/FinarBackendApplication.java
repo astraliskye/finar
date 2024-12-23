@@ -1,7 +1,7 @@
 package com.skyegibney.finar;
 
-import com.skyegibney.finar.models.User;
-import com.skyegibney.finar.repositories.UserRepository;
+import com.skyegibney.finar.authorization.User;
+import com.skyegibney.finar.authorization.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -10,15 +10,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 @EnableAsync
 @Slf4j
 public class FinarBackendApplication {
 	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
 
-	public FinarBackendApplication(UserRepository userRepository) {
+	public FinarBackendApplication(UserRepository userRepository, PasswordEncoder passwordEncoder) {
 		this.userRepository = userRepository;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	public static void main(String[] args) {
@@ -28,9 +31,9 @@ public class FinarBackendApplication {
 	@Bean
 	CommandLineRunner insertUser() {
 		return args -> {
-			userRepository.save(new User(0, "astra", new BCryptPasswordEncoder().encode("password"), "astra"));
-			userRepository.save(new User(0, "user", new BCryptPasswordEncoder().encode("password"), "user"));
-			userRepository.save(new User(0, "kronk", new BCryptPasswordEncoder().encode("password"), "kronk"));
+			userRepository.save(new User(0, "astra", passwordEncoder.encode("password"), "astra"));
+			userRepository.save(new User(0, "user", passwordEncoder.encode("password"), "user"));
+			userRepository.save(new User(0, "kronk", passwordEncoder.encode("password"), "kronk"));
 		};
 	}
 
