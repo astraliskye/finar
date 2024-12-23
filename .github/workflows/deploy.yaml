@@ -52,4 +52,7 @@ jobs:
           host: ${{ vars.HOST }}
           username: ${{ vars.USERNAME }}
           password: ${{ secrets.PASSWORD }}
-          script: 'cd /app; nohup java -jar ./*.jar --spring.profiles.active=prod > spring-log.txt &; exit'
+          script: |
+            cd /app
+            nohup java -jar ./*.jar --spring.profiles.active=prod > spring-log.txt &
+            exit
