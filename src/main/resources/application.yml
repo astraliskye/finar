@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: finar
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+server:
+  servlet:
+    session:
+      timeout: 60s
+  port: 8000
