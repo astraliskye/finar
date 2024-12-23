@@ -19,7 +19,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
       - run: mvn clean package
-      - run: mkdir app && cp target/*.jar src/main/resources/application-prod.yml src/main/resources/application.yml app
+      - run: mkdir app && cp target/*.jar src/main/resources/application-prod.yml app
       - uses: actions/upload-artifact@v4
         with:
           name: Package
