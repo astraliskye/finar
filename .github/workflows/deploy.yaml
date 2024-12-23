@@ -36,8 +36,8 @@ jobs:
           path: app
       - uses: appleboy/ssh-action@v1.2.0
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
+          host: ${{ vars.HOST }}
+          username: ${{ vars.USERNAME }}
           password: ${{ secrets.PASSWORD }}
           script: 'kill $(ps -ef | grep finar | awk "{print $2}"); rm -rf /app'
       - uses: appleboy/scp-action@master
