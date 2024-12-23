@@ -54,5 +54,5 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           script: |
             cd /app
-            nohup java -jar ./*.jar --spring.profiles.active=prod > spring-log.txt &
+            nohup java -jar ./*.jar --spring.profiles.active=prod > spring-log.txt 2> spring-error.txt < /dev/null &
             exit
