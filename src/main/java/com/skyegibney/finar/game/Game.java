@@ -34,7 +34,7 @@ class Game {
     public Game(String p1, String p2) {
         players.add(p1);
         players.add(p2);
-        id = random.nextInt();
+        id = random.nextInt(Integer.MAX_VALUE);
         lastTimeUpdate = System.currentTimeMillis();
         player1Time = 20 * 1000;
         player2Time = 20 * 1000;

@@ -76,7 +76,7 @@ public class MatchmakingService {
                         connectionService.sendMessage(
                                 p,
                                 new MessageResponse(
-                                        "join",
+                                        "matchFound",
                                         gameId
                                 )
                         ));
