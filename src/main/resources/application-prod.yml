@@ -15,4 +15,4 @@ server:
   servlet:
     session:
       timeout: 600s
-  port: 8000
+  port: 7998
