@@ -30,13 +30,14 @@ public class MatchmakingHandler extends FinarSocketHandler {
         super.afterConnectionEstablished(session);
 
         var username = session.getPrincipal().getName();
+        var gameId = gameService.getGameIdByPlayer(username);
 
-        if (gameService.isPlayerInGame(username)) {
+        if (gameId != -1) {
             connectionService.sendMessage(
                     username,
                     new MessageResponse(
-                            "redirect",
-                            "play"
+                            "matchFound",
+                            gameId
                     )
             );
         }

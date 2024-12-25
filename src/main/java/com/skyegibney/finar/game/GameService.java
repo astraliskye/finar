@@ -54,6 +54,16 @@ public class GameService {
         return false;
     }
 
+    public int getGameIdByPlayer(String player) {
+        for (var game: activeGames.values()) {
+            if (game.getPlayers().contains(player)) {
+                return game.getId();
+            }
+        }
+
+        return -1;
+    }
+
     public List<String> getPlayersByGameId(int gameId) {
         var game = activeGames.get(gameId);
 
@@ -209,5 +219,7 @@ public class GameService {
                         winner
                 )
         );
+
+        activeGames.remove(game.getId());
     }
 }
