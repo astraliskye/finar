@@ -8,22 +8,16 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Configuration
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {
-    private final MatchmakingHandler matchmakingHandler;
-    private final PlayHandler playHandler;
+    private final FinarSocketHandler finarSocketHandler;
 
-    public WebSocketConfig(MatchmakingHandler matchmakingHandler, PlayHandler playHandler) {
-        this.matchmakingHandler = matchmakingHandler;
-        this.playHandler = playHandler;
+    public WebSocketConfig(FinarSocketHandler finarSocketHandler) {
+        this.finarSocketHandler = finarSocketHandler;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry
-                .addHandler(matchmakingHandler, "/matchmaking")
-                .setAllowedOrigins("*");
-
-        registry
-                .addHandler(playHandler, "/play")
+                .addHandler(finarSocketHandler, "/ws")
                 .setAllowedOrigins("*");
     }
 }

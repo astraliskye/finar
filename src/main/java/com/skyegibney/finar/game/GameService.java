@@ -10,6 +10,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,7 +57,7 @@ public class GameService {
     }
 
     public int getGameIdByPlayer(String player) {
-        for (var game: activeGames.values()) {
+        for (var game : activeGames.values()) {
             if (game.getPlayers().contains(player)) {
                 return game.getId();
             }
@@ -93,6 +95,13 @@ public class GameService {
     public boolean rejoinPlayer(String player) {
         for (var game : activeGames.values()) {
             if (game.getPlayers().contains(player)) {
+                var timeout = checkTimeoutAndUpdate(game);
+
+                if (timeout) {
+                    cleanupGame(game, ResultType.TIMEOUT, game.getPlayers().get(game.getPlayers().indexOf((game.getCurrentTurn()) + 1) % game.getPlayers().size()));
+                    return false;
+                }
+
                 publisher.publishEvent(
                         new PlayerJoinEvent(
                                 game.getId(),
@@ -110,7 +119,6 @@ public class GameService {
                 return true;
             }
         }
-
 
         return false;
     }

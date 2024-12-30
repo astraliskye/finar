@@ -39,21 +39,16 @@ public class ConnectionService {
         return sessions.containsKey(username);
     }
 
-    public void closeSession(String username) {
-        try {
-            sessions.get(username).close();
-        } catch (Exception e) {
-            log.debug("Exception while closing session for user '{}': {}", username, e.getMessage());
+    public void sendMessage(String username, MessageResponse message) {
+        var session = sessions.get(username);
+        if (session == null) {
+            return;
         }
 
-        sessions.remove(username);
-    }
-
-    public void sendMessage(String username, MessageResponse message) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             String payload = mapper.writeValueAsString(message);
-            sessions.get(username).sendMessage(new TextMessage(payload));
+            session.sendMessage(new TextMessage(payload));
             log.debug("Sending message to user {}: {}", username, payload);
         } catch (IOException e) {
             log.error("Error while sending message for user '{}': {}", username, e.getMessage());
