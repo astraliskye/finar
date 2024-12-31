@@ -36,8 +36,8 @@ class Game {
         players.add(p2);
         id = random.nextInt(Integer.MAX_VALUE);
         lastTimeUpdate = System.currentTimeMillis();
-        player1Time = 20 * 1000;
-        player2Time = 20 * 1000;
+        player1Time = 2 * 60 * 1000;
+        player2Time = 2 * 60 * 1000;
     }
 
     // currentMove can either be 0 or 1
