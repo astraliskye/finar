@@ -167,10 +167,4 @@ class Game {
     public void shufflePlayers() {
         Collections.shuffle(players);
     }
-
-    public void swapPlayers() {
-        String temp = players.get(0);
-        players.set(0, players.get(1));
-        players.set(1, temp);
-    }
 }
