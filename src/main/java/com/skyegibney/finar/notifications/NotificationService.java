@@ -85,7 +85,9 @@ public class NotificationService {
                                 event.opponent(),
                                 event.turn(),
                                 event.moves(),
-                                event.timeControl()
+                                event.timeControl(),
+                                event.wins(),
+                                event.losses()
                         )
                 )
         );

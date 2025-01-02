@@ -102,6 +102,33 @@ public class GameService {
                     return false;
                 }
 
+                log.debug("Starting gameResultResponse query");
+                List<PlayerWins> playerWins = gameResultRepository.getUserVsUser(game.getPlayerOne(), game.getPlayerTwo());
+                log.debug("Player wins size: {}", playerWins.size());
+                playerWins.forEach(pw -> {
+                    log.debug(pw.toString());
+                });
+
+                int wins = 0;
+                int losses = 0;
+
+                if (playerWins.size() == 2) {
+                    log.debug("Player wins is the correct size");
+                    if (playerWins.getFirst().getUsername().equals(player)) {
+                        wins = playerWins.getFirst().getWins();
+                        losses = playerWins.get(1).getWins();
+                    } else {
+                        wins = playerWins.get(1).getWins();
+                        losses = playerWins.getFirst().getWins();
+                    }
+                } else if (playerWins.size() == 1) {
+                    if (playerWins.getFirst().getUsername().equals(player)) {
+                        wins = playerWins.getFirst().getWins();
+                    } else {
+                        losses = playerWins.getFirst().getWins();
+                    }
+                }
+
                 publisher.publishEvent(
                         new PlayerJoinEvent(
                                 game.getId(),
@@ -112,7 +139,9 @@ public class GameService {
                                 new TimeControl(
                                         game.getPlayer1Time(),
                                         game.getPlayer2Time()
-                                )
+                                ),
+                                wins,
+                                losses
                         )
                 );
 

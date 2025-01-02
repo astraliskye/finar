@@ -6,6 +6,8 @@ public record InitialJoin(
         String opponent,
         int turn,
         String moves,
-        TimeControl timeControl
+        TimeControl timeControl,
+        int wins,
+        int losses
 ) {
 }
