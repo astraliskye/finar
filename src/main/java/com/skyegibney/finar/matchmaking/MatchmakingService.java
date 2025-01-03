@@ -88,8 +88,7 @@ public class MatchmakingService {
             connectionService.sendMessage(
                     username,
                     new MessageResponse(
-                            "redirect",
-                            "/"
+                            "lobbyNotFound"
                     )
             );
             return;

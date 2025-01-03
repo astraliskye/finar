@@ -91,8 +91,7 @@ public class FinarSocketHandler extends TextWebSocketHandler {
                         connectionService.sendMessage(
                                 username,
                                 new MessageResponse(
-                                        "redirect",
-                                        "/"
+                                        "matchNotFound"
                                 )
                         );
                     }
