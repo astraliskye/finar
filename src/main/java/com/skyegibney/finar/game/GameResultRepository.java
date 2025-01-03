@@ -3,6 +3,7 @@ package com.skyegibney.finar.game;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -18,7 +19,7 @@ interface PlayerWins {
     Integer getWins();
 }
 
-@Component
+@Repository
 interface GameResultRepository extends JpaRepository<GameResult, Long> {
     @Query(
             value = "select winner as username, count(*) as wins "
