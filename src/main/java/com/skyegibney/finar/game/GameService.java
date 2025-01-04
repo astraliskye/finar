@@ -1,9 +1,6 @@
 package com.skyegibney.finar.game;
 
-import com.skyegibney.finar.game.events.GameOverEvent;
-import com.skyegibney.finar.game.events.MoveMadeEvent;
-import com.skyegibney.finar.game.events.PlayerJoinEvent;
-import com.skyegibney.finar.game.events.TimeUpdateEvent;
+import com.skyegibney.finar.game.events.*;
 import com.skyegibney.finar.notifications.messages.TimeControl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -218,13 +215,24 @@ public class GameService {
     private void cleanupGame(Game game,
                              ResultType resultType,
                              String winner) {
-        publisher.publishEvent(new GameOverEvent(
-                game.getId(),
-                game.getPlayerOne(),
-                game.getPlayerTwo(),
-                resultType.name(),
-                winner
-        ));
+        if (resultType.equals(ResultType.FINAR)) {
+            publisher.publishEvent(new FinarGameOverEvent(
+                    game.getId(),
+                    game.getPlayerOne(),
+                    game.getPlayerTwo(),
+                    resultType.name(),
+                    winner,
+                    game.getWinningMoves()
+            ));
+        } else {
+            publisher.publishEvent(new GameOverEvent(
+                    game.getId(),
+                    game.getPlayerOne(),
+                    game.getPlayerTwo(),
+                    resultType.name(),
+                    winner
+            ));
+        }
 
         gameResultRepository.save(
                 new GameResult(
@@ -232,7 +240,8 @@ public class GameService {
                         game.getPlayers().get(0),
                         game.getPlayers().get(1),
                         resultType,
-                        winner
+                        winner,
+                        game.getMoves().stream().map(Object::toString).collect(Collectors.joining(","))
                 )
         );
 

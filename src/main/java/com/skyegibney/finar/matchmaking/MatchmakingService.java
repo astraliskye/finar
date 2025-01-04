@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -196,7 +197,7 @@ public class MatchmakingService {
             return;
         }
 
-        if (lobby.players().stream().anyMatch(player -> !player.ready)) {
+        if (lobby.players().stream().mapToInt(player -> player.ready ? 1 : 0).sum() != 2) {
             return;
         }
 

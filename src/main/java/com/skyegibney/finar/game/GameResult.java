@@ -25,6 +25,9 @@ class GameResult {
     @Column(nullable = false)
     private ResultType result;
 
-    @Column
+    @Column(nullable = false)
     private String winner;
+
+    @Column(nullable = false)
+    private String moves;
 }

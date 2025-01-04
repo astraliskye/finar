@@ -1,16 +1,16 @@
 package com.skyegibney.finar.notifications;
 
+import com.skyegibney.finar.game.events.*;
 import com.skyegibney.finar.notifications.messages.InitialJoin;
 import com.skyegibney.finar.notifications.messages.MessageResponse;
 import com.skyegibney.finar.notifications.messages.TimeControl;
 import com.skyegibney.finar.game.GameService;
-import com.skyegibney.finar.game.events.GameOverEvent;
-import com.skyegibney.finar.game.events.MoveMadeEvent;
-import com.skyegibney.finar.game.events.PlayerJoinEvent;
-import com.skyegibney.finar.game.events.TimeUpdateEvent;
 import com.skyegibney.finar.websockets.ConnectionService;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Service
 public class NotificationService {
@@ -52,6 +52,22 @@ public class NotificationService {
                             new GameOver(
                                     event.result(),
                                     event.winner()
+                            )
+                    ));
+        });
+    }
+
+    @EventListener
+    void on(FinarGameOverEvent event) {
+        gameService.getPlayersByGameId(event.gameId()).forEach(player -> {
+            connectionService.sendMessage(
+                    player,
+                    new MessageResponse(
+                            "finarGameOver",
+                            new FinarGameOver(
+                                    event.result(),
+                                    event.winner(),
+                                    Arrays.stream(event.winningMoves()).boxed().map(Object::toString).collect(Collectors.joining(","))
                             )
                     ));
         });
