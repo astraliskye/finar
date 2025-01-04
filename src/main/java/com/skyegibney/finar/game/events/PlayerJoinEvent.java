@@ -10,6 +10,7 @@ public record PlayerJoinEvent(
         String moves,
         TimeControl timeControl,
         int wins,
+        int draws,
         int losses
 ) {
 }

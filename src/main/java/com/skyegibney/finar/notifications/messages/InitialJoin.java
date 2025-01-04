@@ -8,6 +8,7 @@ public record InitialJoin(
         String moves,
         TimeControl timeControl,
         int wins,
+        int draws,
         int losses
 ) {
 }

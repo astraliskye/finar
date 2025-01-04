@@ -87,6 +87,7 @@ public class NotificationService {
                                 event.moves(),
                                 event.timeControl(),
                                 event.wins(),
+                                event.draws(),
                                 event.losses()
                         )
                 )
