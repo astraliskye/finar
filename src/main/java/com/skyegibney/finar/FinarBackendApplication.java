@@ -2,6 +2,7 @@ package com.skyegibney.finar;
 
 import com.skyegibney.finar.authorization.User;
 import com.skyegibney.finar.authorization.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -9,7 +10,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Random;
@@ -17,14 +17,10 @@ import java.util.Random;
 @SpringBootApplication
 @EnableAsync
 @Slf4j
+@RequiredArgsConstructor
 public class FinarBackendApplication {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
-
-	public FinarBackendApplication(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-		this.userRepository = userRepository;
-		this.passwordEncoder = passwordEncoder;
-	}
 
 	public static void main(String[] args) {
 		SpringApplication.run(FinarBackendApplication.class, args);

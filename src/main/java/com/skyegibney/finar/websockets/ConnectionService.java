@@ -2,13 +2,12 @@ package com.skyegibney.finar.websockets;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyegibney.finar.notifications.messages.MessageResponse;
-import com.skyegibney.finar.game.events.GameOverEvent;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -18,8 +17,9 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Service
 @Slf4j
-@Component
+@RequiredArgsConstructor
 @EnableScheduling
 public class ConnectionService {
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();

@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyegibney.finar.game.GameService;
 import com.skyegibney.finar.matchmaking.MatchmakingService;
 import com.skyegibney.finar.notifications.messages.MessageResponse;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -15,23 +17,16 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.time.Instant;
 
-@Slf4j
 @Component
+@Slf4j
+@RequiredArgsConstructor
 public class FinarSocketHandler extends TextWebSocketHandler {
     private final ConnectionService connectionService;
     private final MatchmakingService matchmakingService;
     private final GameService gameService;
 
-    public FinarSocketHandler(ConnectionService connectionService,
-                              MatchmakingService matchmakingService,
-                              GameService gameService) {
-        this.connectionService = connectionService;
-        this.matchmakingService = matchmakingService;
-        this.gameService = gameService;
-    }
-
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+    public void afterConnectionEstablished(WebSocketSession session) {
         session.getAttributes().put("createdAt", Instant.now());
         session.getAttributes().put("lastMessageAt", Instant.now());
         connectionService.registerSession(session);
@@ -60,16 +55,9 @@ public class FinarSocketHandler extends TextWebSocketHandler {
             switch (clientMessage.type()) {
                 case "joinQueue":
                     matchmakingService.queuePlayer(session.getPrincipal().getName());
-                    connectionService.sendMessage(session.getPrincipal().getName(),
-                            new MessageResponse("ack", "joinQueue"));
                     break;
                 case "cancelQueue":
-                    if (matchmakingService.removePlayerFromQueue(session.getPrincipal().getName())) {
-                        connectionService.sendMessage(
-                                session.getPrincipal().getName(),
-                                new MessageResponse("ack", "cancelQueue")
-                        );
-                    }
+                    matchmakingService.removePlayerFromQueue(session.getPrincipal().getName());
                 case "joinLobby":
                     int joinLobbyId = clientMessage.lobbyId();
                     matchmakingService.playerJoinLobby(username, joinLobbyId);
@@ -80,7 +68,7 @@ public class FinarSocketHandler extends TextWebSocketHandler {
                     break;
                 case "lobbyChat":
                     var chatLobbyId = clientMessage.lobbyId();
-                    var content = (String)clientMessage.data();
+                    var content = (String) clientMessage.data();
                     matchmakingService.chatMessage(username, chatLobbyId, content);
                     break;
                 case "startGame":

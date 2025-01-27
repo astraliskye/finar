@@ -2,28 +2,22 @@ package com.skyegibney.finar.game;
 
 import com.skyegibney.finar.game.events.*;
 import com.skyegibney.finar.notifications.messages.TimeControl;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class GameService {
     private final GameResultRepository gameResultRepository;
     private final ApplicationEventPublisher publisher;
     private final Map<Integer, Game> activeGames = new HashMap<>();
-
-    public GameService(GameResultRepository gameResultRepository,
-                       ApplicationEventPublisher publisher) {
-        this.gameResultRepository = gameResultRepository;
-        this.publisher = publisher;
-    }
 
     @Scheduled(fixedRate = 20 * 1000)
     public void timeCheck() {

@@ -6,6 +6,8 @@ import com.skyegibney.finar.notifications.messages.MessageResponse;
 import com.skyegibney.finar.notifications.messages.TimeControl;
 import com.skyegibney.finar.game.GameService;
 import com.skyegibney.finar.websockets.ConnectionService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
@@ -13,18 +15,15 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class NotificationService {
     private final ConnectionService connectionService;
     private final GameService gameService;
 
-    public NotificationService(ConnectionService connectionService, GameService gameService) {
-        this.connectionService = connectionService;
-        this.gameService = gameService;
-    }
-
     @EventListener
     void on(MoveMadeEvent event) {
-        gameService.getPlayersByGameId(event.gameId()).forEach(player -> {
+        gameService.getPlayersByGameId(event.gameId()).forEach(player ->
                     connectionService.sendMessage(
                             player,
                             new MessageResponse(
@@ -37,14 +36,13 @@ public class NotificationService {
                                                     event.player2Time()
                                             )
                                     )
-                            ));
-                }
+                            ))
         );
     }
 
     @EventListener
     void on(GameOverEvent event) {
-        gameService.getPlayersByGameId(event.gameId()).forEach(player -> {
+        gameService.getPlayersByGameId(event.gameId()).forEach(player ->
             connectionService.sendMessage(
                     player,
                     new MessageResponse(
@@ -53,13 +51,13 @@ public class NotificationService {
                                     event.result(),
                                     event.winner()
                             )
-                    ));
-        });
+                    ))
+        );
     }
 
     @EventListener
     void on(FinarGameOverEvent event) {
-        gameService.getPlayersByGameId(event.gameId()).forEach(player -> {
+        gameService.getPlayersByGameId(event.gameId()).forEach(player ->
             connectionService.sendMessage(
                     player,
                     new MessageResponse(
@@ -69,13 +67,13 @@ public class NotificationService {
                                     event.winner(),
                                     Arrays.stream(event.winningMoves()).boxed().map(Object::toString).collect(Collectors.joining(","))
                             )
-                    ));
-        });
+                    ))
+        );
     }
 
     @EventListener
     void on(TimeUpdateEvent event) {
-        gameService.getPlayersByGameId(event.gameId()).forEach(player -> {
+        gameService.getPlayersByGameId(event.gameId()).forEach(player ->
             connectionService.sendMessage(
                     player,
                     new MessageResponse(
@@ -85,8 +83,8 @@ public class NotificationService {
                                     event.player2Time()
                             )
                     )
-            );
-        });
+            )
+        );
     }
 
     @EventListener

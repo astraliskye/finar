@@ -5,15 +5,16 @@ import com.skyegibney.finar.notifications.messages.ChatMessage;
 import com.skyegibney.finar.notifications.messages.MessageResponse;
 import com.skyegibney.finar.notifications.messages.PlayerReadyStatus;
 import com.skyegibney.finar.websockets.ConnectionService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.IntStream;
 
-@Slf4j
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class MatchmakingService {
     private final Queue<String> matchmakingQueue = new LinkedList<>();
     private final Random random;
@@ -21,30 +22,68 @@ public class MatchmakingService {
     private final ConnectionService connectionService;
     private final Map<Integer, Lobby> lobbies = new HashMap<>();
 
-    public MatchmakingService(Random random, GameService gameService, ConnectionService connectionService) {
-        this.random = random;
-        this.gameService = gameService;
-        this.connectionService = connectionService;
+    int getLobbyIdByUsername(String username) {
+        for (Lobby lobby : lobbies.values()) {
+            if (lobby.players().stream().anyMatch(p -> p.getUsername().equals(username))) {
+                return lobby.id();
+            }
+        }
+
+        return -1;
     }
 
-    public void queuePlayer(String playerName) {
-        if (gameService.isPlayerInGame(playerName)) {
+    public void queuePlayer(String username) {
+        var gameId = gameService.getGameIdByPlayer(username);
+        if (gameId != -1) {
+            connectionService.sendMessage(
+                    username,
+                    new MessageResponse(
+                            "gameInProgress",
+                            gameId
+                    )
+            );
             return;
         }
 
-        if (isPlayerInQueue(playerName)) {
+        var lobbyId = getLobbyIdByUsername(username);
+        if (lobbyId != -1) {
+            connectionService.sendMessage(
+                    username,
+                    new MessageResponse(
+                            "lobbyInProgress",
+                            gameId
+                    )
+            );
             return;
         }
 
-        matchmakingQueue.add(playerName);
+        if (!isPlayerInQueue(username)) {
+            matchmakingQueue.add(username);
+        }
+
+        connectionService.sendMessage(
+                username,
+                new MessageResponse(
+                        "ack",
+                        "joinQueue"
+                )
+        );
     }
 
     public boolean isPlayerInQueue(String playerName) {
         return matchmakingQueue.contains(playerName);
     }
 
-    public boolean removePlayerFromQueue(String playerName) {
-        return matchmakingQueue.remove(playerName);
+    public void removePlayerFromQueue(String playerName) {
+        matchmakingQueue.remove(playerName);
+
+        connectionService.sendMessage(
+                playerName,
+                new MessageResponse(
+                        "ack",
+                        "cancelQueue"
+                )
+        );
     }
 
     // Returns a list of two players or a list of zero players
@@ -143,11 +182,11 @@ public class MatchmakingService {
             return;
         }
 
-        if (!lobby.players().stream().anyMatch(player -> player.username.equals(username))) {
+        if (lobby.players().stream().noneMatch(player -> player.username.equals(username))) {
             return;
         }
 
-        lobby.players().forEach(player -> {
+        lobby.players().forEach(player ->
             connectionService.sendMessage(
                     player.username,
                     new MessageResponse(
@@ -157,8 +196,8 @@ public class MatchmakingService {
                                     content
                             )
                     )
-            );
-        });
+            )
+        );
     }
 
     public void togglePlayerReady(String username, int lobbyId) {
@@ -171,7 +210,7 @@ public class MatchmakingService {
             if (player.username.equals(username)) {
                 player.ready = !player.ready;
 
-                lobby.players().forEach(recipient -> {
+                lobby.players().forEach(recipient ->
                     connectionService.sendMessage(
                             recipient.username,
                             new MessageResponse(
@@ -181,8 +220,8 @@ public class MatchmakingService {
                                             player.ready
                                     )
                             )
-                    );
-                });
+                    )
+                );
             }
         });
     }

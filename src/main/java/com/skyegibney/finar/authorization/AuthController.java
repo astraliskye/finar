@@ -6,11 +6,10 @@ import com.skyegibney.finar.authorization.exceptions.UnauthenticatedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
@@ -18,18 +17,12 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 
 @RestController
+@RequiredArgsConstructor
 public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final AuthenticationService authenticationService;
     private final HttpSessionSecurityContextRepository sessionSecurityContextRepository;
     private final SecurityContextHolderStrategy securityContextHolder;
-
-    public AuthController(AuthenticationManager authenticationManager, AuthenticationService authenticationService, HttpSessionSecurityContextRepository sessionSecurityContextRepository, SecurityContextHolderStrategy securityContextHolder) {
-        this.authenticationManager = authenticationManager;
-        this.authenticationService = authenticationService;
-        this.sessionSecurityContextRepository = sessionSecurityContextRepository;
-        this.securityContextHolder = securityContextHolder;
-    }
 
     @GetMapping("/me")
     public Principal me(Principal user) throws UnauthenticatedException {
