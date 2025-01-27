@@ -20,42 +20,48 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
+  }
 
-    @Bean
-    HttpSessionSecurityContextRepository httpSessionSecurityContextRepository() {
-        return new HttpSessionSecurityContextRepository();
-    }
+  @Bean
+  HttpSessionSecurityContextRepository httpSessionSecurityContextRepository() {
+    return new HttpSessionSecurityContextRepository();
+  }
 
-    @Bean
-    SecurityContextHolderStrategy securityContextHolderStrategy() {
-        return SecurityContextHolder.getContextHolderStrategy();
-    }
+  @Bean
+  SecurityContextHolderStrategy securityContextHolderStrategy() {
+    return SecurityContextHolder.getContextHolderStrategy();
+  }
 
-    @Bean
-    public AuthenticationManager authenticationManager(CustomUserDetailsService customUserDetailsService, PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(customUserDetailsService);
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
+  @Bean
+  public AuthenticationManager authenticationManager(
+      CustomUserDetailsService customUserDetailsService, PasswordEncoder passwordEncoder) {
+    DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+    daoAuthenticationProvider.setUserDetailsService(customUserDetailsService);
+    daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
 
-        return new ProviderManager(daoAuthenticationProvider);
-    }
+    return new ProviderManager(daoAuthenticationProvider);
+  }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/register", "/me").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .logout(logout -> logout.permitAll()
-                        .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setStatus(HttpServletResponse.SC_OK);
-                        }))
-                .csrf(AbstractHttpConfigurer::disable)
-                .build();
-    }
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    return http.authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers("/login", "/register", "/me")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
+        .logout(
+            logout ->
+                logout
+                    .permitAll()
+                    .logoutSuccessHandler(
+                        (request, response, authentication) ->
+                          response.setStatus(HttpServletResponse.SC_OK)
+                        ))
+        .csrf(AbstractHttpConfigurer::disable)
+        .build();
+  }
 }

@@ -11,25 +11,26 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class AuthenticationService {
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+  private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
 
-    public User registerUser(RegisterRequestDto registrationRequest) throws DuplicateUsernameException, DuplicateEmailException {
-        var nameCheck = userRepository.findByUsername(registrationRequest.username());
-        if (nameCheck != null) {
-            throw new DuplicateUsernameException();
-        }
-
-        var emailCheck = userRepository.findByEmail(registrationRequest.email());
-        if (emailCheck != null) {
-            throw new DuplicateEmailException();
-        }
-
-        return userRepository.save(new User(
-                0,
-                registrationRequest.username(),
-                passwordEncoder.encode(registrationRequest.password()),
-                registrationRequest.email()
-        ));
+  public User registerUser(RegisterRequestDto registrationRequest)
+      throws DuplicateUsernameException, DuplicateEmailException {
+    var nameCheck = userRepository.findByUsername(registrationRequest.username());
+    if (nameCheck != null) {
+      throw new DuplicateUsernameException();
     }
+
+    var emailCheck = userRepository.findByEmail(registrationRequest.email());
+    if (emailCheck != null) {
+      throw new DuplicateEmailException();
+    }
+
+    return userRepository.save(
+        new User(
+            0,
+            registrationRequest.username(),
+            passwordEncoder.encode(registrationRequest.password()),
+            registrationRequest.email()));
+  }
 }

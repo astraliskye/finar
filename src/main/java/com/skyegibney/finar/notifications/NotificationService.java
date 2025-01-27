@@ -18,93 +18,82 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class NotificationService {
-    private final ConnectionService connectionService;
-    private final GameService gameService;
+  private final ConnectionService connectionService;
+  private final GameService gameService;
 
-    @EventListener
-    void on(MoveMadeEvent event) {
-        gameService.getPlayersByGameId(event.gameId()).forEach(player ->
-                    connectionService.sendMessage(
-                            player,
-                            new MessageResponse(
-                                    "move",
-                                    new Move(
-                                            event.player(),
-                                            event.n(),
-                                            new TimeControl(
-                                                    event.player1Time(),
-                                                    event.player2Time()
-                                            )
-                                    )
-                            ))
-        );
-    }
-
-    @EventListener
-    void on(GameOverEvent event) {
-        gameService.getPlayersByGameId(event.gameId()).forEach(player ->
-            connectionService.sendMessage(
+  @EventListener
+  void on(MoveMadeEvent event) {
+    gameService
+        .getPlayersByGameId(event.gameId())
+        .forEach(
+            player ->
+                connectionService.sendMessage(
                     player,
                     new MessageResponse(
-                            "gameOver",
-                            new GameOver(
-                                    event.result(),
-                                    event.winner()
-                            )
-                    ))
-        );
-    }
+                        "move",
+                        new Move(
+                            event.player(),
+                            event.n(),
+                            new TimeControl(event.player1Time(), event.player2Time())))));
+  }
 
-    @EventListener
-    void on(FinarGameOverEvent event) {
-        gameService.getPlayersByGameId(event.gameId()).forEach(player ->
-            connectionService.sendMessage(
+  @EventListener
+  void on(GameOverEvent event) {
+    gameService
+        .getPlayersByGameId(event.gameId())
+        .forEach(
+            player ->
+                connectionService.sendMessage(
+                    player,
+                    new MessageResponse("gameOver", new GameOver(event.result(), event.winner()))));
+  }
+
+  @EventListener
+  void on(FinarGameOverEvent event) {
+    gameService
+        .getPlayersByGameId(event.gameId())
+        .forEach(
+            player ->
+                connectionService.sendMessage(
                     player,
                     new MessageResponse(
-                            "finarGameOver",
-                            new FinarGameOver(
-                                    event.result(),
-                                    event.winner(),
-                                    Arrays.stream(event.winningMoves()).boxed().map(Object::toString).collect(Collectors.joining(","))
-                            )
-                    ))
-        );
-    }
+                        "finarGameOver",
+                        new FinarGameOver(
+                            event.result(),
+                            event.winner(),
+                            Arrays.stream(event.winningMoves())
+                                .boxed()
+                                .map(Object::toString)
+                                .collect(Collectors.joining(","))))));
+  }
 
-    @EventListener
-    void on(TimeUpdateEvent event) {
-        gameService.getPlayersByGameId(event.gameId()).forEach(player ->
-            connectionService.sendMessage(
+  @EventListener
+  void on(TimeUpdateEvent event) {
+    gameService
+        .getPlayersByGameId(event.gameId())
+        .forEach(
+            player ->
+                connectionService.sendMessage(
                     player,
                     new MessageResponse(
-                            "timeUpdate",
-                            new TimeControl(
-                                    event.player1Time(),
-                                    event.player2Time()
-                            )
-                    )
-            )
-        );
-    }
+                        "timeUpdate", new TimeControl(event.player1Time(), event.player2Time()))));
+  }
 
-    @EventListener
-    void on(PlayerJoinEvent event) {
-        connectionService.sendMessage(
+  @EventListener
+  void on(PlayerJoinEvent event) {
+    connectionService.sendMessage(
+        event.player(),
+        new MessageResponse(
+            "initialJoin",
+            new InitialJoin(
+                event.gameId(),
                 event.player(),
-                new MessageResponse(
-                        "initialJoin",
-                        new InitialJoin(
-                                event.gameId(),
-                                event.player(),
-                                event.opponent(),
-                                event.turn(),
-                                event.moves(),
-                                event.timeControl(),
-                                event.wins(),
-                                event.draws(),
-                                event.losses()
-                        )
-                )
-        );
-    }
+                event.opponent(),
+                event.turn(),
+                event.moves(),
+                event.timeControl(),
+                event.wins(),
+                event.draws(),
+                event.losses())));
+  }
 }

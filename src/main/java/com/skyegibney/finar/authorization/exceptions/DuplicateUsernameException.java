@@ -1,4 +1,3 @@
 package com.skyegibney.finar.authorization.exceptions;
 
-public class DuplicateUsernameException extends Exception {
-}
+public class DuplicateUsernameException extends Exception {}

@@ -12,19 +12,15 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new UsernameNotFoundException(username);
-        }
-
-        return User
-                .withUsername(user.getUsername())
-                .password(user.getPassword())
-                .roles("USER")
-                .build();
+  @Override
+  public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    var user = userRepository.findByUsername(username);
+    if (user == null) {
+      throw new UsernameNotFoundException(username);
     }
+
+    return User.withUsername(user.getUsername()).password(user.getPassword()).roles("USER").build();
+  }
 }

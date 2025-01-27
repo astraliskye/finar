@@ -19,44 +19,53 @@ import java.security.Principal;
 @RestController
 @RequiredArgsConstructor
 public class AuthController {
-    private final AuthenticationManager authenticationManager;
-    private final AuthenticationService authenticationService;
-    private final HttpSessionSecurityContextRepository sessionSecurityContextRepository;
-    private final SecurityContextHolderStrategy securityContextHolder;
+  private final AuthenticationManager authenticationManager;
+  private final AuthenticationService authenticationService;
+  private final HttpSessionSecurityContextRepository sessionSecurityContextRepository;
+  private final SecurityContextHolderStrategy securityContextHolder;
 
-    @GetMapping("/me")
-    public Principal me(Principal user) throws UnauthenticatedException {
-        if (user == null) {
-            throw new UnauthenticatedException();
-        }
-
-        return user;
+  @GetMapping("/me")
+  public Principal me(Principal user) throws UnauthenticatedException {
+    if (user == null) {
+      throw new UnauthenticatedException();
     }
 
-    @PostMapping("/login")
-    public Object login(@RequestBody @Valid LoginRequestDto dto, HttpServletRequest request, HttpServletResponse response) {
-        var authenticationRequest = UsernamePasswordAuthenticationToken.unauthenticated(dto.username(), dto.password());
-        var authenticationResult = authenticationManager.authenticate(authenticationRequest);
+    return user;
+  }
 
-        var context = securityContextHolder.createEmptyContext();
-        context.setAuthentication(authenticationResult);
-        sessionSecurityContextRepository.saveContext(context, request, response);
+  @PostMapping("/login")
+  public Object login(
+      @RequestBody @Valid LoginRequestDto dto,
+      HttpServletRequest request,
+      HttpServletResponse response) {
+    var authenticationRequest =
+        UsernamePasswordAuthenticationToken.unauthenticated(dto.username(), dto.password());
+    var authenticationResult = authenticationManager.authenticate(authenticationRequest);
 
-        return authenticationResult.getPrincipal();
-    }
+    var context = securityContextHolder.createEmptyContext();
+    context.setAuthentication(authenticationResult);
+    sessionSecurityContextRepository.saveContext(context, request, response);
 
-    @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/register")
-    public Object register(@RequestBody @Valid RegisterRequestDto dto, HttpServletRequest request, HttpServletResponse response) throws DuplicateUsernameException, DuplicateEmailException {
-        authenticationService.registerUser(dto);
+    return authenticationResult.getPrincipal();
+  }
 
-        var authenticationRequest = UsernamePasswordAuthenticationToken.unauthenticated(dto.username(), dto.password());
-        var authenticationResult = authenticationManager.authenticate(authenticationRequest);
+  @ResponseStatus(HttpStatus.CREATED)
+  @PostMapping("/register")
+  public Object register(
+      @RequestBody @Valid RegisterRequestDto dto,
+      HttpServletRequest request,
+      HttpServletResponse response)
+      throws DuplicateUsernameException, DuplicateEmailException {
+    authenticationService.registerUser(dto);
 
-        var context = securityContextHolder.createEmptyContext();
-        context.setAuthentication(authenticationResult);
-        sessionSecurityContextRepository.saveContext(context, request, response);
+    var authenticationRequest =
+        UsernamePasswordAuthenticationToken.unauthenticated(dto.username(), dto.password());
+    var authenticationResult = authenticationManager.authenticate(authenticationRequest);
 
-        return authenticationResult.getPrincipal();
-    }
+    var context = securityContextHolder.createEmptyContext();
+    context.setAuthentication(authenticationResult);
+    sessionSecurityContextRepository.saveContext(context, request, response);
+
+    return authenticationResult.getPrincipal();
+  }
 }

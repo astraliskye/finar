@@ -12,22 +12,21 @@ import lombok.Setter;
 @Getter
 @Setter
 class GameResult {
-    @Id
-    private long id;
+  @Id private long id;
 
-    @Column(nullable = false)
-    private String player1;
+  @Column(nullable = false)
+  private String player1;
 
-    @Column(nullable = false)
-    private String player2;
+  @Column(nullable = false)
+  private String player2;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ResultType result;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private ResultType result;
 
-    @Column(nullable = false)
-    private String winner;
+  @Column(nullable = false)
+  private String winner;
 
-    @Column(nullable = false)
-    private String moves;
+  @Column(nullable = false)
+  private String moves;
 }
