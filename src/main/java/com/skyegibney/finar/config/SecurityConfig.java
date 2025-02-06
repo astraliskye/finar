@@ -1,6 +1,6 @@
-package com.skyegibney.finar;
+package com.skyegibney.finar.config;
 
-import com.skyegibney.finar.authorization.CustomUserDetailsService;
+import com.skyegibney.finar.auth.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,6 +41,7 @@ public class SecurityConfig {
     DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
     daoAuthenticationProvider.setUserDetailsService(customUserDetailsService);
     daoAuthenticationProvider.setPasswordEncoder(passwordEncoder);
+    daoAuthenticationProvider.setHideUserNotFoundExceptions(true);
 
     return new ProviderManager(daoAuthenticationProvider);
   }
