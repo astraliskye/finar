@@ -32,7 +32,7 @@ public class AuthController {
   @GetMapping("/me")
   public UserResponseDto me(@AuthenticationPrincipal User user) throws UnauthenticatedException {
     if (user == null) {
-      throw new UnauthenticatedException("No existing user session");
+      throw new UnauthenticatedException("Invalid user credentials");
     }
 
     return new UserResponseDto(
