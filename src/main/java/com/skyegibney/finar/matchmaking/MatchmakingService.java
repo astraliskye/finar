@@ -1,12 +1,14 @@
 package com.skyegibney.finar.matchmaking;
 
 import com.skyegibney.finar.game.GameService;
+import com.skyegibney.finar.matchmaking.events.PlayerKickedEvent;
 import com.skyegibney.finar.notifications.messages.ChatMessage;
 import com.skyegibney.finar.notifications.messages.MessageResponse;
 import com.skyegibney.finar.notifications.messages.PlayerReadyStatus;
 import com.skyegibney.finar.websockets.ConnectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,8 @@ public class MatchmakingService {
   private final Random random;
   private final GameService gameService;
   private final ConnectionService connectionService;
+  private final ApplicationEventPublisher publisher;
+
   private final Map<Integer, Lobby> lobbies = new HashMap<>();
 
   int getLobbyIdByUsername(String username) {
@@ -81,6 +85,16 @@ public class MatchmakingService {
     return result;
   }
 
+  public List<String> getPlayersByLobbyId(int lobbyId) {
+    var lobby = lobbies.get(lobbyId);
+
+    if (lobby == null) {
+      return new ArrayList<>();
+    }
+
+    return lobby.players().stream().map(Player::getUsername).toList();
+  }
+
   public int createLobby(String username) {
     var players = new ArrayList<>(List.of(new Player(username, false)));
     var lobbyId = random.nextInt(Integer.MAX_VALUE);
@@ -139,6 +153,25 @@ public class MatchmakingService {
                 connectionService.sendMessage(
                     player.username,
                     new MessageResponse("lobbyChat", new ChatMessage(username, content))));
+  }
+
+  public void kickPlayer(String principalUsername, int lobbyId, String playerToKick) {
+    var lobby = lobbies.get(lobbyId);
+    if (lobby == null) {
+      return;
+    }
+
+    if (!lobby.owner().equals(principalUsername)) {
+      return;
+    }
+
+    if (lobby.owner().equals(playerToKick)) {
+      return;
+    }
+
+    if (lobby.players().removeIf(player -> player.username.equals(playerToKick))) {
+      publisher.publishEvent(new PlayerKickedEvent(lobbyId, playerToKick));
+    }
   }
 
   public void togglePlayerReady(String username, int lobbyId) {

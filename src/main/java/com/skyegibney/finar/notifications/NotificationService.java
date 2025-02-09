@@ -1,8 +1,11 @@
 package com.skyegibney.finar.notifications;
 
 import com.skyegibney.finar.game.events.*;
+import com.skyegibney.finar.matchmaking.MatchmakingService;
+import com.skyegibney.finar.matchmaking.events.PlayerKickedEvent;
 import com.skyegibney.finar.notifications.messages.InitialJoin;
 import com.skyegibney.finar.notifications.messages.MessageResponse;
+import com.skyegibney.finar.notifications.messages.PlayerKickedMessage;
 import com.skyegibney.finar.notifications.messages.TimeControl;
 import com.skyegibney.finar.game.GameService;
 import com.skyegibney.finar.websockets.ConnectionService;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 public class NotificationService {
   private final ConnectionService connectionService;
   private final GameService gameService;
+  private final MatchmakingService matchmakingService;
 
   @EventListener
   void on(MoveMadeEvent event) {
@@ -95,5 +99,22 @@ public class NotificationService {
                 event.wins(),
                 event.draws(),
                 event.losses())));
+  }
+
+  @EventListener
+  void on(PlayerKickedEvent event) {
+    matchmakingService
+        .getPlayersByLobbyId(event.lobbyId())
+        .forEach(
+            player ->
+                connectionService.sendMessage(
+                    player,
+                    new MessageResponse(
+                        "playerKicked", new PlayerKickedMessage(event.lobbyId(), event.player()))));
+
+    connectionService.sendMessage(
+            event.player(),
+            new MessageResponse(
+                    "playerKicked", new PlayerKickedMessage(event.lobbyId(), event.player())));
   }
 }

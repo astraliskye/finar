@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyegibney.finar.game.GameService;
 import com.skyegibney.finar.matchmaking.MatchmakingService;
 import com.skyegibney.finar.notifications.messages.MessageResponse;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -30,16 +30,14 @@ public class FinarSocketHandler extends TextWebSocketHandler {
     session.getAttributes().put("createdAt", Instant.now());
     session.getAttributes().put("lastMessageAt", Instant.now());
     connectionService.registerSession(session);
-
-    // TODO: logic to rejoin active lobby or game
-    // TODO: make it so that a player can't join a lobby if they're in another lobby or have an
-    // active game
-    // TODO: make a way for players to leave active games (client side)
   }
 
   @Override
-  public void handleMessage(WebSocketSession session, WebSocketMessage<?> message)
+  public void handleMessage(WebSocketSession session, @NonNull WebSocketMessage<?> message)
       throws Exception {
+    if (session.getPrincipal() == null) {
+      return;
+    }
     session.getAttributes().put("lastMessageAt", Instant.now());
     log.debug(
         "Received message from {}: {}", session.getPrincipal().getName(), message.getPayload());
@@ -47,12 +45,15 @@ public class FinarSocketHandler extends TextWebSocketHandler {
   }
 
   @Override
-  protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+  protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
     super.handleTextMessage(session, message);
 
     try {
       ObjectMapper mapper = new ObjectMapper();
       ClientMessage clientMessage = mapper.readValue(message.getPayload(), ClientMessage.class);
+      if (session.getPrincipal() == null) {
+        return;
+      }
       var username = session.getPrincipal().getName();
 
       switch (clientMessage.type()) {
@@ -68,6 +69,10 @@ public class FinarSocketHandler extends TextWebSocketHandler {
         case "readyPlayer":
           int readyPlayerLobbyId = clientMessage.lobbyId();
           matchmakingService.togglePlayerReady(username, readyPlayerLobbyId);
+          break;
+        case "kickPlayer":
+          int kickPlayerLobbyId = clientMessage.lobbyId();
+          matchmakingService.kickPlayer(username, kickPlayerLobbyId, (String)clientMessage.data());
           break;
         case "lobbyChat":
           var chatLobbyId = clientMessage.lobbyId();
@@ -101,7 +106,7 @@ public class FinarSocketHandler extends TextWebSocketHandler {
   }
 
   @Override
-  public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
+  public void handleTransportError(@NonNull WebSocketSession session, @NonNull Throwable exception) throws Exception {
     super.handleTransportError(session, exception);
     session.close(CloseStatus.SERVER_ERROR);
   }
