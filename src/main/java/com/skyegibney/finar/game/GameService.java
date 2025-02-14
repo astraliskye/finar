@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class GameService {
   private final GameResultRepository gameResultRepository;
   private final ApplicationEventPublisher publisher;
-  private final Map<Integer, Game> activeGames = new HashMap<>();
+  private final Map<Long, Game> activeGames = new HashMap<>();
 
   @Scheduled(fixedRate = 20 * 1000)
   public void timeCheck() {
@@ -48,17 +48,17 @@ public class GameService {
     return false;
   }
 
-  public int getGameIdByPlayer(String player) {
+  public Optional<Long> getGameIdByPlayer(String player) {
     for (var game : activeGames.values()) {
       if (game.getPlayers().contains(player)) {
-        return game.getId();
+        return Optional.of(game.getId());
       }
     }
 
-    return -1;
+    return Optional.empty();
   }
 
-  public List<String> getPlayersByGameId(int gameId) {
+  public List<String> getPlayersByGameId(long gameId) {
     var game = activeGames.get(gameId);
 
     if (game == null) {
@@ -68,7 +68,7 @@ public class GameService {
     }
   }
 
-  public void quitPlayer(int gameId, String player) {
+  public void quitPlayer(long gameId, String player) {
     var game = activeGames.get(gameId);
 
     if (game == null || !game.getPlayers().contains(player)) {
@@ -124,7 +124,7 @@ public class GameService {
     return false;
   }
 
-  public void makeMove(int gameId, String player, byte n) {
+  public void makeMove(long gameId, String player, byte n) {
     var game = activeGames.get(gameId);
 
     if (game == null
@@ -157,7 +157,7 @@ public class GameService {
     }
   }
 
-  public void handleFlag(int gameId, String player) {
+  public void handleFlag(long gameId, String player) {
     var game = activeGames.get(gameId);
     if (game == null) {
       return;

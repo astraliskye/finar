@@ -1,7 +1,9 @@
 package com.skyegibney.finar.notifications.messages;
 
+import java.util.UUID;
+
 public record InitialJoin(
-    int gameId,
+    String gameId,
     String player,
     String opponent,
     int turn,

@@ -1,7 +1,9 @@
 package com.skyegibney.finar.matchmaking;
 
 import com.skyegibney.finar.game.GameService;
+import com.skyegibney.finar.matchmaking.events.LobbyDisbandedEvent;
 import com.skyegibney.finar.matchmaking.events.PlayerKickedEvent;
+import com.skyegibney.finar.matchmaking.events.PlayerLeftEvent;
 import com.skyegibney.finar.notifications.messages.ChatMessage;
 import com.skyegibney.finar.notifications.messages.MessageResponse;
 import com.skyegibney.finar.notifications.messages.PlayerReadyStatus;
@@ -26,28 +28,25 @@ public class MatchmakingService {
 
   private final Map<Integer, Lobby> lobbies = new HashMap<>();
 
-  int getLobbyIdByUsername(String username) {
+  Lobby getLobbyByUsername(String username) {
     for (Lobby lobby : lobbies.values()) {
       if (lobby.players().stream().anyMatch(p -> p.getUsername().equals(username))) {
-        return lobby.id();
+        return lobby;
       }
     }
 
-    return -1;
+    return null;
   }
 
   public void queuePlayer(String username) {
+    // Redirect player to game if they are currently in a game
     var gameId = gameService.getGameIdByPlayer(username);
-    if (gameId != -1) {
-      connectionService.sendMessage(username, new MessageResponse("gameInProgress", gameId));
+    if (gameId.isPresent()) {
+      connectionService.sendMessage(username, new MessageResponse("matchFound", Long.toString(gameId.get())));
       return;
     }
 
-    var lobbyId = getLobbyIdByUsername(username);
-    if (lobbyId != -1) {
-      connectionService.sendMessage(username, new MessageResponse("lobbyInProgress", gameId));
-      return;
-    }
+    removePlayerFromLobbies(username);
 
     if (!isPlayerInQueue(username)) {
       matchmakingQueue.add(username);
@@ -62,7 +61,6 @@ public class MatchmakingService {
 
   public void removePlayerFromQueue(String playerName) {
     matchmakingQueue.remove(playerName);
-
     connectionService.sendMessage(playerName, new MessageResponse("ack", "cancelQueue"));
   }
 
@@ -96,9 +94,14 @@ public class MatchmakingService {
   }
 
   public int createLobby(String username) {
+    var gameId = gameService.getGameIdByPlayer(username);
+    if (gameId.isPresent()) {
+      connectionService.sendMessage(username, new MessageResponse("matchFound", Long.toString(gameId.get())));
+      return -1;
+    }
+
     var players = new ArrayList<>(List.of(new Player(username, false)));
     var lobbyId = random.nextInt(Integer.MAX_VALUE);
-
     var lobby = new Lobby(lobbyId, username, players);
 
     lobbies.put(lobbyId, lobby);
@@ -116,10 +119,11 @@ public class MatchmakingService {
 
     if (lobby.players().stream().anyMatch(p -> p.username.equals(username))) {
       connectionService.sendMessage(username, new MessageResponse("lobbyInfo", lobby));
-
     } else if (lobby.players().size() >= 2) {
       connectionService.sendMessage(username, new MessageResponse("lobbyFull"));
     } else {
+      removePlayerFromQueue(username);
+      removePlayerFromLobbies(username);
       lobby.players().add(new Player(username, false));
 
       connectionService.sendMessage(username, new MessageResponse("lobbyInfo", lobby));
@@ -134,6 +138,28 @@ public class MatchmakingService {
                 }
               });
     }
+  }
+
+  private void removePlayerFromLobbies(String username) {
+    var playerLobbies =
+        lobbies.values().stream()
+            .filter(
+                lobby ->
+                    lobby.players().stream().anyMatch(player -> player.username.equals(username)))
+            .toList();
+
+    playerLobbies.forEach(
+        lobby -> {
+          lobby.players().removeIf(p -> p.getUsername().equals(username));
+
+          // Notify other players
+          if (lobby.owner().equals(username)) {
+            publisher.publishEvent(new LobbyDisbandedEvent(lobby.id()));
+            lobbies.remove(lobby.id());
+          } else {
+            publisher.publishEvent(new PlayerLeftEvent(lobby.id(), username));
+          }
+        });
   }
 
   public void chatMessage(String username, int lobbyId, String content) {
@@ -214,7 +240,7 @@ public class MatchmakingService {
       return;
     }
 
-    long gameId =
+    var gameId =
         gameService.createGame(lobby.players().get(0).username, lobby.players().get(1).username);
 
     lobby
@@ -222,7 +248,7 @@ public class MatchmakingService {
         .forEach(
             p ->
                 connectionService.sendMessage(
-                    p.username, new MessageResponse("matchFound", gameId)));
+                    p.username, new MessageResponse("matchFound", Long.toString(gameId))));
 
     lobbies.remove(lobbyId);
   }
@@ -233,10 +259,10 @@ public class MatchmakingService {
       List<String> players = matchPlayers();
 
       if (players.size() == 2) {
-        long gameId = gameService.createGame(players.get(0), players.get(1));
+        var gameId = gameService.createGame(players.get(0), players.get(1));
 
         players.forEach(
-            p -> connectionService.sendMessage(p, new MessageResponse("matchFound", gameId)));
+            p -> connectionService.sendMessage(p, new MessageResponse("matchFound", Long.toString(gameId))));
       }
     }
   }

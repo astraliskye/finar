@@ -2,11 +2,10 @@ package com.skyegibney.finar.notifications;
 
 import com.skyegibney.finar.game.events.*;
 import com.skyegibney.finar.matchmaking.MatchmakingService;
+import com.skyegibney.finar.matchmaking.events.LobbyDisbandedEvent;
 import com.skyegibney.finar.matchmaking.events.PlayerKickedEvent;
-import com.skyegibney.finar.notifications.messages.InitialJoin;
-import com.skyegibney.finar.notifications.messages.MessageResponse;
-import com.skyegibney.finar.notifications.messages.PlayerKickedMessage;
-import com.skyegibney.finar.notifications.messages.TimeControl;
+import com.skyegibney.finar.matchmaking.events.PlayerLeftEvent;
+import com.skyegibney.finar.notifications.messages.*;
 import com.skyegibney.finar.game.GameService;
 import com.skyegibney.finar.websockets.ConnectionService;
 import lombok.RequiredArgsConstructor;
@@ -90,7 +89,7 @@ public class NotificationService {
         new MessageResponse(
             "initialJoin",
             new InitialJoin(
-                event.gameId(),
+                Long.toString(event.gameId()),
                 event.player(),
                 event.opponent(),
                 event.turn(),
@@ -110,11 +109,33 @@ public class NotificationService {
                 connectionService.sendMessage(
                     player,
                     new MessageResponse(
-                        "playerKicked", new PlayerKickedMessage(event.lobbyId(), event.player()))));
+                        "playerKicked", new PlayerKickedMessage(Long.toString(event.lobbyId()), event.player()))));
 
     connectionService.sendMessage(
-            event.player(),
-            new MessageResponse(
-                    "playerKicked", new PlayerKickedMessage(event.lobbyId(), event.player())));
+        event.player(),
+        new MessageResponse(
+            "playerKicked", new PlayerKickedMessage(Long.toString(event.lobbyId()), event.player())));
+  }
+
+  @EventListener
+  void on(PlayerLeftEvent event) {
+    matchmakingService
+        .getPlayersByLobbyId(event.lobbyId())
+        .forEach(
+            player ->
+                connectionService.sendMessage(
+                    player,
+                    new MessageResponse(
+                        "playerLeft", new PlayerLeftMessage(Long.toString(event.lobbyId()), event.player()))));
+  }
+
+  @EventListener
+  void on(LobbyDisbandedEvent event) {
+    matchmakingService
+        .getPlayersByLobbyId(event.lobbyId())
+        .forEach(
+            player ->
+                connectionService.sendMessage(
+                    player, new MessageResponse("lobbyDisbanded", new LobbyDisbandedMessage(Long.toString(event.lobbyId())))));
   }
 }

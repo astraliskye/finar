@@ -10,7 +10,7 @@ import java.util.*;
 @Getter
 @Setter
 class Game {
-  private int id;
+  private long id;
 
   private List<String> players = new ArrayList<>();
 
@@ -34,7 +34,7 @@ class Game {
   public Game(String p1, String p2) {
     players.add(p1);
     players.add(p2);
-    id = random.nextInt(Integer.MAX_VALUE);
+    id = random.nextLong();
     lastTimeUpdate = System.currentTimeMillis();
     player1Time = 2 * 60 * 1000;
     player2Time = 2 * 60 * 1000;

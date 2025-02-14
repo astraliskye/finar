@@ -2,8 +2,10 @@ package com.skyegibney.finar.game.events;
 
 import com.skyegibney.finar.notifications.messages.TimeControl;
 
+import java.util.UUID;
+
 public record PlayerJoinEvent(
-    int gameId,
+    long gameId,
     String player,
     String opponent,
     int turn,
