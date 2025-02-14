@@ -38,16 +38,6 @@ public class GameService {
     return game.getId();
   }
 
-  public boolean isPlayerInGame(String player) {
-    for (var game : activeGames.values()) {
-      if (game.getPlayers().contains(player)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   public Optional<Long> getGameIdByPlayer(String player) {
     for (var game : activeGames.values()) {
       if (game.getPlayers().contains(player)) {

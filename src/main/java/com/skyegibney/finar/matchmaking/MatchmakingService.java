@@ -28,16 +28,6 @@ public class MatchmakingService {
 
   private final Map<Integer, Lobby> lobbies = new HashMap<>();
 
-  Lobby getLobbyByUsername(String username) {
-    for (Lobby lobby : lobbies.values()) {
-      if (lobby.players().stream().anyMatch(p -> p.getUsername().equals(username))) {
-        return lobby;
-      }
-    }
-
-    return null;
-  }
-
   public void queuePlayer(String username) {
     // Redirect player to game if they are currently in a game
     var gameId = gameService.getGameIdByPlayer(username);
