@@ -1,31 +1,43 @@
-# FINAR
+# FINAR backend
 
-FINAR is a 
+This is the backend for the online multiplayer tic-tac-toe app FINAR, where
+players complete to be the first to make five-in-a-row on a 10 by 10 board.
 
-## Getting Started
+## Features
 
-### Prerequisites
+The app features:
+- Intense timed player vs player games
+- Players make moves in real-time
+- In-lobby and in-game instant messaging
+- Lobby-based and quickmatch-based matchmaking
+- View wins, losses, and draws vs the current opponent in-game
 
-- PostgreSQL database for storing user data and game results
-- Redis instance for storing user session data
-- Java 21
-- Maven
+## Tech Stack
 
-### Installation
+### Frontend
 
+- React
+- Vite
+- TypeScript
+- React Query
+- React Router
+- WebSocket API
 
+### Backend
 
-## Usage
-
-This project is meant to be used as a backend for the official FINAR frontend client, but don't let that stop you from
-creating your own custom frontend if you desire.
-
-### Auth endpoints
-
-### Websocket connections
+- Spring
+- Spring Security
+- Spring Session
+- Websockets
+- Redis for user sessions
+- PostgreSQL
 
 ## Roadmap
 
-- [ ] Add multiplayer
-- [ ] Add rematch functionality
-- [ ] Show lifetime and individual scores
+Featues that may come in the future:
+- Player rematch functionality
+- User profiles
+- Adding friends
+- Other game modes
+- Custom time controls
+- Achievements
