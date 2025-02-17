@@ -2,7 +2,7 @@ spring:
   application:
     name: finar
   datasource:
-    url: jdbc:postgresql://localhost/finar?user=app&password=password
+    url: jdbc:postgresql://localhost/finar?user=app&password=hike
   jpa:
     hibernate:
       ddl-auto: create

@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skyegibney.finar.game.GameService;
 import com.skyegibney.finar.matchmaking.MatchmakingService;
 import com.skyegibney.finar.notifications.messages.MessageResponse;
+import com.skyegibney.finar.websockets.events.GameChatEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
@@ -24,6 +26,7 @@ public class FinarSocketHandler extends TextWebSocketHandler {
   private final ConnectionService connectionService;
   private final MatchmakingService matchmakingService;
   private final GameService gameService;
+  private final ApplicationEventPublisher publisher;
 
   @Override
   public void afterConnectionEstablished(WebSocketSession session) {
@@ -51,6 +54,7 @@ public class FinarSocketHandler extends TextWebSocketHandler {
     try {
       ObjectMapper mapper = new ObjectMapper();
       ClientMessage clientMessage = mapper.readValue(message.getPayload(), ClientMessage.class);
+
       if (session.getPrincipal() == null) {
         return;
       }
@@ -76,8 +80,17 @@ public class FinarSocketHandler extends TextWebSocketHandler {
           break;
         case "lobbyChat":
           var chatLobbyId = clientMessage.lobbyId();
-          var content = (String) clientMessage.data();
-          matchmakingService.chatMessage(username, chatLobbyId, content);
+          var lobbyChatContent = (String) clientMessage.data();
+          matchmakingService.chatMessage(username, chatLobbyId, lobbyChatContent);
+          break;
+        case "gameChat":
+          var chatGameId = clientMessage.gameId();
+          var gameChatContent = (String) clientMessage.data();
+          publisher.publishEvent(new GameChatEvent(
+                  Long.parseLong(chatGameId),
+                  username,
+                  gameChatContent
+          ));
           break;
         case "startGame":
           var startGameLobbyId = clientMessage.lobbyId();
@@ -88,15 +101,15 @@ public class FinarSocketHandler extends TextWebSocketHandler {
           }
           break;
         case "quit":
-          gameService.quitPlayer(clientMessage.gameId(), session.getPrincipal().getName());
+          gameService.quitPlayer(Long.parseLong(clientMessage.gameId()), session.getPrincipal().getName());
           break;
         case "move":
           byte move = ((Integer) clientMessage.data()).byteValue();
 
-          gameService.makeMove(clientMessage.gameId(), username, move);
+          gameService.makeMove(Long.parseLong(clientMessage.gameId()), username, move);
           break;
         case "timeFlag":
-          gameService.handleFlag(clientMessage.gameId(), session.getPrincipal().getName());
+          gameService.handleFlag(Long.parseLong(clientMessage.gameId()), session.getPrincipal().getName());
         default:
           break;
       }
