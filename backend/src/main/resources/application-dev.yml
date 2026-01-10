@@ -1,31 +1,15 @@
 spring:
-  application:
-    name: finar
-  datasource:
-    url: jdbc:postgresql://localhost/finar?user=app&password=hike
   jpa:
     hibernate:
       ddl-auto: create
     generate-ddl: true
     show-sql: true
-  security:
-    user:
-      name: user
-      password: password
-  data:
-    redis:
-      host: 127.0.0.1
-      port: 6379
-server:
-  servlet:
-    session:
-      timeout: 60s
-  port: 8000
 logging:
   level:
     root: WARN
     org.springframework:
       web: DEBUG
+      security: DEBUG
     com.skyegibney.finar:
       game: DEBUG
       notifications: DEBUG

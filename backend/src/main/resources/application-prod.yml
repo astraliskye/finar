@@ -1,18 +1,5 @@
 spring:
-  application:
-    name: finar
-  datasource:
-    url: jdbc:postgresql://localhost/finar?user=${PG_USERNAME}&password=${PG_PASSWORD}
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     generate-ddl: true
-  data:
-    redis:
-      host: localhost
-      port: 6379
-server:
-  servlet:
-    session:
-      timeout: 600s
-  port: 7998
