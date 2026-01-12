@@ -2,7 +2,7 @@ spring:
   application:
     name: finar
   datasource:
-    url: jdbc:postgresql://${PG_HOST}/finar?user=${PG_USERNAME}&password=${PG_PASSWORD}
+    url: jdbc:postgresql://${POSTGRES_HOST}/finar?user=${POSTGRES_USERNAME}&password=${POSTGRES_PASSWORD}
   data:
     redis:
       host: ${REDIS_HOST}
@@ -11,4 +11,3 @@ server:
   servlet:
     session:
       timeout: 60s
-  port: 8000

@@ -3,3 +3,5 @@ spring:
     hibernate:
       ddl-auto: none
     generate-ddl: true
+server:
+  port: 80

@@ -2,8 +2,15 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create
-    generate-ddl: true
     show-sql: true
+    properties:
+      javax:
+        persistence:
+          schema-generation:
+            create-source: metadata
+            scripts:
+              action: create
+              create-target: src/main/resources/schema.sql
 logging:
   level:
     root: WARN
@@ -16,6 +23,8 @@ logging:
       matchmaking: DEBUG
       websockets: DEBUG
       authorization: DEBUG
+server:
+  port: 8000
 
 logging.level.com.skyegibney.finar.game: DEBUG
 logging.level.com.skyegibney.finar.notifications: DEBUG
