@@ -5,7 +5,7 @@ services:
     container_name: finar-postgres
     image: postgres
     environment:
-      - POSTGRES_PASSWORD
+      - POSTGRES_PASSWORD=${FINAR_POSTGRES_PASSWORD}
       - POSTGRES_USER=app
       - POSTGRES_DB=finar
     healthcheck:
@@ -33,7 +33,7 @@ services:
       - REDIS_HOST=finar-redis
       - POSTGRES_HOST=finar-postgres
       - POSTGRES_USERNAME=app
-      - POSTGRES_PASSWORD
+      - POSTGRES_PASSWORD=${FINAR_POSTGRES_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy

@@ -16,6 +16,6 @@ COPY --from=builder --chown=spring:spring /app/target/*.jar ./app.jar
 
 USER spring:spring
 
-EXPOSE 8000
+EXPOSE 80
 
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
