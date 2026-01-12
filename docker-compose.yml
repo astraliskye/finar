@@ -13,6 +13,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - pgdata:/var/lib/postgresql
   redis:
     container_name: finar-redis
     image: redis
@@ -41,3 +43,5 @@ services:
     container_name: finar-frontend
     build:
       context: client
+volumes:
+  pgdata:
