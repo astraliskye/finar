@@ -14,4 +14,6 @@ FROM nginx:alpine AS production
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+COPY --from=builder /app/nginx/nginx.conf /etc/nginx/nginx.conf
+
 EXPOSE 80
