@@ -60,3 +60,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+## Local dev overrides
+docker-compose.override.yml
