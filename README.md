@@ -95,24 +95,21 @@ Required for local or Docker:
 
 ## Roadmap
 
-Portfolio ready:
+Portfolio ready (priority order):
 - [ ] Add a short demo video or GIF and screenshots to this README.
-- [ ] Write an architecture overview with a diagram and key design decisions.
-- [ ] Add a clear API/WebSocket message reference.
-- [ ] Add automated tests for game logic and matchmaking flows.
-- [ ] Polish UI/UX, onboarding, and accessibility (keyboard, ARIA, contrast).
-- [ ] Document deployment steps and local dev troubleshooting.
+- [ ] Fix local dev instructions (`cd client` should be `cd frontend`).
+- [ ] Remove debug `console.log` left in production game code.
+- [ ] Add unit tests for core game logic (win detection, move validation).
+- [ ] Add an architecture diagram (e.g. Mermaid) to this README.
+- [ ] Document the WebSocket message protocol (message types and payloads).
 
-Production and real userbase readiness:
-- [ ] Harden matchmaking, reconnect logic, and spectator mode.
-- [ ] Implement anti-cheat and server-authoritative game validation.
-- [ ] Add rate limiting, abuse prevention, and moderation tooling.
-- [ ] Add account security (email verification, password reset, optional OAuth).
-- [ ] Production hosting with TLS, domain, and CDN for static assets.
-- [ ] Observability: metrics, logs, tracing, and alerting.
-- [ ] Backups, migrations, and data retention policy.
-- [ ] Scale-out readiness: load balancing, sticky sessions for WebSockets, Redis clustering.
-- [ ] Growth features: leaderboards, profiles, matchmaking rating, and analytics.
+Production and real userbase readiness (priority order):
+- [ ] TLS + domain (CSRF is currently disabled — only safe over HTTPS).
+- [ ] Re-enable CSRF protection or enforce `SameSite=Strict` session cookies.
+- [ ] Rate limiting on `/login`, `/register`, and game action endpoints.
+- [ ] Pin Docker image versions (`postgres`, `redis`) to avoid unexpected breakage.
+- [ ] WebSocket reconnect logic so players can recover from dropped connections.
+- [ ] Observability: structured logging, metrics, and alerting.
 
 ## License
 
