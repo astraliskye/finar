@@ -9,7 +9,7 @@ services:
       - POSTGRES_USER=app
       - POSTGRES_DB=finar
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -18,10 +18,10 @@ services:
   redis:
     container_name: finar-redis
     image: redis
-  nginx:
-    container_name: finar-nginx
+  proxy:
+    container_name: finar-proxy
     build:
-      context: nginx
+      context: proxy
     ports:
       - 8889:80
     depends_on:
@@ -42,6 +42,6 @@ services:
   frontend:
     container_name: finar-frontend
     build:
-      context: client
+      context: frontend
 volumes:
   pgdata:
