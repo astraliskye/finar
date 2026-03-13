@@ -15,8 +15,6 @@ function Home() {
     useEffect(() => {
         setMessageCallback((message: MessageEvent) => {
             const body = JSON.parse(message.data) as { type: string, data: string };
-            console.log(message.data);
-            console.log(body);
 
             switch (body.type) {
                 case "matchFound":

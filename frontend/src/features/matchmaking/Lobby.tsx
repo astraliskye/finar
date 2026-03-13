@@ -25,7 +25,6 @@ function Lobby() {
     useEffect(() => {
         setMessageCallback((messageEvent) => {
             const message = JSON.parse(messageEvent.data) as { type: string, data: any }
-            console.log(message);
 
             switch (message.type) {
                 case "lobbyInfo":
