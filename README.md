@@ -71,7 +71,7 @@ Backend runs on `http://localhost:8000` in dev.
 ### 3) Run the frontend
 
 ```bash
-cd client
+cd frontend
 npm install
 npm run dev
 ```
@@ -97,8 +97,8 @@ Required for local or Docker:
 
 Portfolio ready (priority order):
 - [ ] Add a short demo video or GIF and screenshots to this README.
-- [ ] Fix local dev instructions (`cd client` should be `cd frontend`).
-- [ ] Remove debug `console.log` left in production game code.
+- [x] Fix local dev instructions (`cd client` should be `cd frontend`).
+- [x] Remove debug `console.log` left in production game code.
 - [ ] Add unit tests for core game logic (win detection, move validation).
 - [ ] Add an architecture diagram (e.g. Mermaid) to this README.
 - [ ] Document the WebSocket message protocol (message types and payloads).
