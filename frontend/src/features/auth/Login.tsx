@@ -23,7 +23,6 @@ function Login() {
 
             if (response.status !== 200) {
                 const errorData = await response.json();
-                console.log(errorData);
                 throw new Error(errorData.error)
             }
         },

@@ -50,7 +50,6 @@ function Play() {
 
     const messageCallback = useCallback((message: MessageEvent) => {
         const body = JSON.parse(message.data) as { type: string, data: any };
-        console.log(body);
 
         switch (body.type) {
             case "redirect":
