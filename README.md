@@ -16,20 +16,10 @@ FINAR (Five In A Row) is an online multiplayer game inspired by Gomoku. Players 
 
 ## Tech Stack
 
-- Frontend: React + TypeScript + Vite + Tailwind CSS
-- Backend: Spring Boot 3, WebSocket, JPA, Spring Security
+- Frontend: React, TypeScript, Vite, TailwindCSS
+- Backend: Spring Boot 3, WebSockets, Hibernate, Spring Security
 - Data: PostgreSQL, Redis, Flyway
-- Infra: Docker, Nginx reverse proxy
-
-## Architecture
-
-High level request flow:
-
-- Browser -> Nginx
-- Nginx serves the static frontend and proxies `/api/*` (including `/api/ws`) to the backend.
-- Backend handles REST auth/lobby endpoints and WebSocket game events.
-- PostgreSQL stores users and game results.
-- Redis stores sessions and ephemeral state.
+- Infra: Docker
 
 ## Quickstart (Docker)
 
@@ -47,11 +37,17 @@ Then open `http://localhost:8889`.
 
 ### 1) Start dependencies
 
+If you have Docker installed:
+
 ```bash
 export FINAR_POSTGRES_PASSWORD=your_password
 
 docker compose up postgres redis
 ```
+
+If not, you will have to manually setup:
+1. PostgreSQL - user needs flyway privileges
+2. Redis
 
 ### 2) Run the backend
 
@@ -60,7 +56,7 @@ cd backend
 
 export POSTGRES_HOST=localhost
 export POSTGRES_USERNAME=app
-export POSTGRES_PASSWORD=$FINAR_POSTGRES_PASSWORD
+export POSTGRES_PASSWORD='your psql user pw'
 export REDIS_HOST=localhost
 
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
@@ -80,8 +76,6 @@ Vite serves the app on `http://localhost:5173` and proxies `/api` to the backend
 
 ## Environment Variables
 
-Required for local or Docker:
-
 - `FINAR_POSTGRES_PASSWORD`: Password for the Postgres `app` user.
 - `POSTGRES_HOST`: Hostname for Postgres (defaults to container name in Docker).
 - `POSTGRES_USERNAME`: Postgres username (default `app`).
@@ -95,21 +89,7 @@ Required for local or Docker:
 
 ## Roadmap
 
-Portfolio ready (priority order):
-- [ ] Add a short demo video or GIF and screenshots to this README.
-- [x] Fix local dev instructions (`cd client` should be `cd frontend`).
-- [x] Remove debug `console.log` left in production game code.
-- [ ] Add unit tests for core game logic (win detection, move validation).
-- [ ] Add an architecture diagram (e.g. Mermaid) to this README.
-- [ ] Document the WebSocket message protocol (message types and payloads).
-
-Production and real userbase readiness (priority order):
-- [ ] TLS + domain (CSRF is currently disabled — only safe over HTTPS).
-- [ ] Re-enable CSRF protection or enforce `SameSite=Strict` session cookies.
-- [ ] Rate limiting on `/login`, `/register`, and game action endpoints.
-- [ ] Pin Docker image versions (`postgres`, `redis`) to avoid unexpected breakage.
-- [ ] WebSocket reconnect logic so players can recover from dropped connections.
-- [ ] Observability: structured logging, metrics, and alerting.
+TBD - reviving the project
 
 ## License
 
