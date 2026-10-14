@@ -3,14 +3,6 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
-    properties:
-      javax:
-        persistence:
-          schema-generation:
-            create-source: metadata
-            scripts:
-              action: create
-              create-target: src/main/resources/schema.sql
 logging:
   level:
     root: WARN
